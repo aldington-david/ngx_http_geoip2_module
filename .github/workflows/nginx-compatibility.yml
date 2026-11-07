@@ -1,0 +1,31 @@
+name: Nginx compatibility
+
+on:
+  push:
+    branches: [compatibility]
+  workflow_dispatch:
+    inputs:
+      nginx_version:
+        description: Official Nginx release to validate
+        required: true
+        default: '1.31.8'
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      NGINX_VERSION: ${{ inputs.nginx_version || '1.31.8' }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends build-essential libssl-dev libpcre2-dev zlib1g-dev libmaxminddb-dev
+      - name: Build and exercise HTTP and stream features
+        run: bash tests/compatibility.sh "$NGINX_VERSION"
